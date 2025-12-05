@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Users, Play, Plus, ChevronRight } from 'lucide-react';
+import { Star, Users, Play, Plus, ChevronRight, Check } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 
@@ -23,6 +23,42 @@ export default function MovieDetailPage() {
   const [reviewContent, setReviewContent] = useState('');
   const [hasSpoiler, setHasSpoiler] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  
+  // Wishlist states
+  const [isInWishlist, setIsInWishlist] = useState(false);
+  const [showWishlistPopup, setShowWishlistPopup] = useState(false);
+
+  // Movie data (mock - sẽ thay bằng API)
+  const movieData = {
+    id: id,
+    title: 'Avatar',
+    year: 2009,
+    duration: '2h30m',
+    rating: 7.9,
+    ratingCount: 1000,
+    genres: ['Fantasy', 'Action', 'Adventure', 'Thriller'],
+    poster: '/placeholder.jpg',
+    description: 'A paraplegic Marine sent to the moon Pandora on a special mission must struggle between following orders and protecting the world he calls home.',
+    director: 'James Cameron',
+    stars: ['James Cameron', 'James Cameron']
+  };
+
+  // Check if movie is in wishlist on mount
+  useEffect(() => {
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    const isInList = wishlist.some(movie => movie.id === id);
+    setIsInWishlist(isInList);
+  }, [id]);
+
+  // Auto-hide popup after 3 seconds
+  useEffect(() => {
+    if (showWishlistPopup) {
+      const timer = setTimeout(() => {
+        setShowWishlistPopup(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showWishlistPopup]);
 
   const reviews = [
     {
@@ -101,6 +137,29 @@ export default function MovieDetailPage() {
     setHasSpoiler(false);
     setAgreedToTerms(false);
     setShowRatingModal(false);
+  };
+
+  const handleAddToWishlist = () => {
+    // Get current wishlist from localStorage
+    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    
+    // Check if already in wishlist
+    if (wishlist.some(movie => movie.id === id)) {
+      return;
+    }
+
+    // Add movie to wishlist
+    const movieToAdd = {
+      ...movieData,
+      dateAdded: new Date().toISOString().split('T')[0]
+    };
+    
+    wishlist.push(movieToAdd);
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+    
+    // Update state and show popup
+    setIsInWishlist(true);
+    setShowWishlistPopup(true);
   };
 
   return (
@@ -332,9 +391,26 @@ export default function MovieDetailPage() {
             </div>
 
             {/* Add to Wishlist Button */}
-            <button className="w-full bg-gray-800 text-white py-4 flex items-center justify-center gap-3 hover:bg-gray-700 transition rounded text-lg font-semibold">
-              <Plus size={24} />
-              <span>Add to Wishlist</span>
+            <button 
+              onClick={handleAddToWishlist}
+              disabled={isInWishlist}
+              className={`w-full py-4 flex items-center justify-center gap-3 transition rounded text-lg font-semibold ${
+                isInWishlist 
+                  ? 'bg-green-600 text-white cursor-not-allowed' 
+                  : 'bg-gray-800 text-white hover:bg-gray-700'
+              }`}
+            >
+              {isInWishlist ? (
+                <>
+                  <Check size={24} />
+                  <span>Added to Wishlist</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={24} />
+                  <span>Add to Wishlist</span>
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -381,6 +457,19 @@ export default function MovieDetailPage() {
           </div>
         </div>
       </main>
+
+      {/* Wishlist Success Popup */}
+      {showWishlistPopup && (
+        <div className="fixed bottom-8 right-8 bg-green-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
+          <div className="bg-white rounded-full p-1">
+            <Check size={24} className="text-green-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-lg">Added to Wishlist!</p>
+            <p className="text-sm text-green-100">{movieData.title} has been added to your wishlist</p>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

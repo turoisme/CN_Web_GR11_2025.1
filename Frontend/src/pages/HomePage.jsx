@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Play, Menu } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Menu, X } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [showPopularInterest, setShowPopularInterest] = useState(false);
+  const [showWorstReviewed, setShowWorstReviewed] = useState(false);
   const totalSlides = 7;
 
   const nextSlide = () => {
@@ -110,10 +112,13 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-gray-800">
+              <button 
+                onClick={() => setShowPopularInterest(true)}
+                className="flex items-center gap-2 text-gray-800 hover:text-gray-600 transition"
+              >
                 <Menu size={18} strokeWidth={2} />
                 <span className="font-semibold text-sm">List</span>
-              </div>
+              </button>
             </div>
             <h3 className="text-xl font-semibold mt-4 text-gray-900">What to watch in November</h3>
           </div>
@@ -138,15 +143,114 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-gray-800">
+              <button 
+                onClick={() => setShowWorstReviewed(true)}
+                className="flex items-center gap-2 text-gray-800 hover:text-gray-600 transition"
+              >
                 <Menu size={18} strokeWidth={2} />
                 <span className="font-semibold text-sm">List</span>
-              </div>
+              </button>
             </div>
             <h3 className="text-xl font-semibold mt-4 text-gray-900">Lowest rated movie</h3>
           </div>
         </div>
       </section>
+
+      {/* Popular Interest Popup */}
+      {showPopularInterest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">What to watch in November</h2>
+              <button 
+                onClick={() => setShowPopularInterest(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
+                  <div 
+                    key={item}
+                    onClick={() => {
+                      setShowPopularInterest(false);
+                      navigate(`/movie/${item}`);
+                    }}
+                    className="cursor-pointer group"
+                  >
+                    <div className="aspect-[2/3] bg-gray-200 flex items-center justify-center mb-3 shadow-md group-hover:opacity-80 transition">
+                      <div className="text-gray-300">
+                        <svg width="100%" height="100%" viewBox="0 0 100 150" className="w-24 h-36">
+                          <line x1="20" y1="30" x2="80" y2="120" stroke="currentColor" strokeWidth="8" />
+                          <line x1="80" y1="30" x2="20" y2="120" stroke="currentColor" strokeWidth="8" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition">Movie Title {item}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-yellow-500">★</span>
+                      <span className="text-sm text-gray-600">8.{item}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Worst Reviewed Popup */}
+      {showWorstReviewed && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">Lowest rated movie</h2>
+              <button 
+                onClick={() => setShowWorstReviewed(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((item) => (
+                  <div 
+                    key={item}
+                    onClick={() => {
+                      setShowWorstReviewed(false);
+                      navigate(`/movie/${item + 10}`);
+                    }}
+                    className="cursor-pointer group"
+                  >
+                    <div className="aspect-[2/3] bg-gray-200 flex items-center justify-center mb-3 shadow-md group-hover:opacity-80 transition">
+                      <div className="text-gray-300">
+                        <svg width="100%" height="100%" viewBox="0 0 100 150" className="w-24 h-36">
+                          <line x1="20" y1="30" x2="80" y2="120" stroke="currentColor" strokeWidth="8" />
+                          <line x1="80" y1="30" x2="20" y2="120" stroke="currentColor" strokeWidth="8" />
+                        </svg>
+                      </div>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition">Movie Title {item + 10}</h3>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-yellow-500">★</span>
+                      <span className="text-sm text-gray-600">{item}.{item}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

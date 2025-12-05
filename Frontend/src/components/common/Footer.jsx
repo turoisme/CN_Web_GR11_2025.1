@@ -26,31 +26,31 @@ export default function Footer() {
             <h3 className="text-white font-bold text-lg mb-3">Quick Links</h3>
             <ul className="space-y-2 text-sm text-gray-400">
               <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
-              <li><Link to="/movies" className="hover:text-white transition-colors">Movies</Link></li>
-              <li><Link to="/reviews" className="hover:text-white transition-colors">Reviews</Link></li>
-              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/wishlist" className="hover:text-white transition-colors">Wishlist</Link></li>
+              <li><Link to="/profile" className="hover:text-white transition-colors">Profile</Link></li>
+              <li><Link to="/search" className="hover:text-white transition-colors">Search</Link></li>
             </ul>
           </div>
 
-          {/* Categories */}
+          {/* Features */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-3">Categories</h3>
+            <h3 className="text-white font-bold text-lg mb-3">Features</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/genre/action" className="hover:text-white transition-colors">Action</Link></li>
-              <li><Link to="/genre/comedy" className="hover:text-white transition-colors">Comedy</Link></li>
-              <li><Link to="/genre/drama" className="hover:text-white transition-colors">Drama</Link></li>
-              <li><Link to="/genre/thriller" className="hover:text-white transition-colors">Thriller</Link></li>
+              <li><Link to="/" className="hover:text-white transition-colors">Browse Movies</Link></li>
+              <li><Link to="/wishlist" className="hover:text-white transition-colors">My Wishlist</Link></li>
+              <li><Link to="/search" className="hover:text-white transition-colors">Search Movies</Link></li>
+              <li><Link to="/admin" className="hover:text-white transition-colors">Admin Panel</Link></li>
             </ul>
           </div>
 
-          {/* Support */}
+          {/* Help & Info */}
           <div>
-            <h3 className="text-white font-bold text-lg mb-3">Support</h3>
+            <h3 className="text-white font-bold text-lg mb-3">Help & Info</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li><Link to="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-              <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><a href="mailto:support@filmrate.com" className="hover:text-white transition-colors">Contact Support</a></li>
+              <li><Link to="/admin" className="hover:text-white transition-colors">Admin Panel</Link></li>
+              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>
