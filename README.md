@@ -258,9 +258,13 @@ FilmRate/
 ## 👥 Team
 
 **Group 11 - CN Web 2025.1**
-- Member 1: [Name]
-- Member 2: [Name]
-- Member 3: [Name]
+- Member 1: Nguyen Thanh Tan
+- Member 2: Nguyen Duc Tin
+- Member 3: Phan Van Nghi
+- Member 4: Nguyen Trong Giap
+- Member 5: Nguyen Khac Diep
+- Member 6: Tran Quoc Duy
+  
 
 ## 📝 License
 
