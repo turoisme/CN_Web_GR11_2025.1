@@ -73,17 +73,18 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-lg max-w-4xl w-full overflow-hidden shadow-2xl relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
+        >
+          <X size={24} />
+        </button>
+        
         <div className="flex">
           {/* Left side - Form */}
           <div className="flex-1 p-8">
-            {/* Close button */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
-            >
-              <X size={24} />
-            </button>
 
             {/* Title */}
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Login</h2>
