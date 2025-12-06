@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Star, Users, Play, Plus, ChevronRight, Check } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import { AuthContext } from '../context/AuthContext';
 
 export default function MovieDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   
   // Saved user review data (would come from API)
   const [savedReview, setSavedReview] = useState({
@@ -27,6 +29,7 @@ export default function MovieDetailPage() {
   // Wishlist states
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [showWishlistPopup, setShowWishlistPopup] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
 
   // Movie data (mock - sẽ thay bằng API)
   const movieData = {
@@ -45,10 +48,12 @@ export default function MovieDetailPage() {
 
   // Check if movie is in wishlist on mount
   useEffect(() => {
-    const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-    const isInList = wishlist.some(movie => movie.id === id);
-    setIsInWishlist(isInList);
-  }, [id]);
+    if (user) {
+      const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      const isInList = wishlist.some(movie => movie.id === id);
+      setIsInWishlist(isInList);
+    }
+  }, [id, user]);
 
   // Auto-hide popup after 3 seconds
   useEffect(() => {
@@ -59,6 +64,16 @@ export default function MovieDetailPage() {
       return () => clearTimeout(timer);
     }
   }, [showWishlistPopup]);
+
+  // Auto-hide login alert after 3 seconds
+  useEffect(() => {
+    if (showLoginAlert) {
+      const timer = setTimeout(() => {
+        setShowLoginAlert(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showLoginAlert]);
 
   const reviews = [
     {
@@ -140,6 +155,12 @@ export default function MovieDetailPage() {
   };
 
   const handleAddToWishlist = () => {
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginAlert(true);
+      return;
+    }
+
     // Get current wishlist from localStorage
     const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
     
@@ -467,6 +488,21 @@ export default function MovieDetailPage() {
           <div>
             <p className="font-semibold text-lg">Added to Wishlist!</p>
             <p className="text-sm text-green-100">{movieData.title} has been added to your wishlist</p>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Alert */}
+      {showLoginAlert && (
+        <div className="fixed bottom-8 right-8 bg-red-600 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center gap-3 animate-slide-up z-50">
+          <div className="bg-white rounded-full p-1">
+            <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <div>
+            <p className="font-semibold text-lg">Login Required</p>
+            <p className="text-sm text-red-100">Please login to add movies to your wishlist</p>
           </div>
         </div>
       )}
