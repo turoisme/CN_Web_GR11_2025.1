@@ -50,6 +50,11 @@ export const adminService = {
   },
 
   // Movie management
+  getAllMovies: async () => {
+    const response = await api.get('/admin/movies');
+    return response;
+  },
+
   createMovie: async (movieData) => {
     const response = await api.post('/admin/movies', movieData);
     return response;

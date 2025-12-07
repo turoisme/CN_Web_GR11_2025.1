@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const Movie = require('../models/Movie');
 const Review = require('../models/Review');
+const Genre = require('../models/Genre');
+const Director = require('../models/Director');
+const Actor = require('../models/Actor');
 const { HTTP_STATUS, MESSAGES } = require('../utils/constants');
 const { validatePaginationParams } = require('../utils/validators');
 
@@ -181,6 +184,134 @@ exports.deleteUser = async (req, res, next) => {
 };
 
 // ========== MOVIE MANAGEMENT (UC015) ==========
+
+// @desc    Get all movies (admin - no filter)
+// @route   GET /api/admin/movies
+// @access  Private/Admin
+exports.getAllMovies = async (req, res, next) => {
+  try {
+    const { page, limit } = validatePaginationParams(
+      req.query.page,
+      req.query.limit
+    );
+    const { search, isActive } = req.query;
+
+    const filter = {};
+    
+    if (search) {
+      filter.$or = [
+        { title: new RegExp(search, 'i') },
+        { description: new RegExp(search, 'i') }
+      ];
+    }
+    
+    if (isActive !== undefined) {
+      filter.isActive = isActive === 'true';
+    }
+
+    const total = await Movie.countDocuments(filter);
+
+    const moviesRaw = await Movie.find(filter)
+      .sort('-createdAt')
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .select('-__v')
+      .lean();
+
+    const movies = await Promise.all(
+      moviesRaw.map(async (movie) => {
+        try {
+          const genresArray = Array.isArray(movie.genres) ? movie.genres : [];
+          const directorsArray = Array.isArray(movie.directors) ? movie.directors : [];
+          const actorsArray = Array.isArray(movie.actors) ? movie.actors : [];
+
+          const validGenreIds = genresArray.filter(id => {
+            if (!id) return false;
+            const idStr = id.toString();
+            return /^[0-9a-fA-F]{24}$/.test(idStr) && !idStr.includes('|');
+          });
+
+          const validDirectorIds = directorsArray.filter(id => {
+            if (!id) return false;
+            return /^[0-9a-fA-F]{24}$/.test(id.toString());
+          });
+
+          const validActorIds = actorsArray.filter(id => {
+            if (!id) return false;
+            return /^[0-9a-fA-F]{24}$/.test(id.toString());
+          });
+
+          const populatedMovie = { ...movie };
+          
+          if (validGenreIds.length > 0) {
+            const genres = await Genre.find({ _id: { $in: validGenreIds } }).select('name slug').lean();
+            populatedMovie.genres = genres;
+          } else {
+            populatedMovie.genres = [];
+          }
+
+          if (validDirectorIds.length > 0) {
+            const directors = await Director.find({ _id: { $in: validDirectorIds } }).select('name').lean();
+            populatedMovie.directors = directors;
+          } else {
+            populatedMovie.directors = [];
+          }
+
+          if (validActorIds.length > 0) {
+            const actors = await Actor.find({ _id: { $in: validActorIds } }).select('name').lean();
+            populatedMovie.actors = actors;
+          } else {
+            populatedMovie.actors = [];
+          }
+
+          if (movie.createdBy) {
+            const user = await User.findById(movie.createdBy).select('username').lean();
+            populatedMovie.createdBy = user;
+          }
+
+          return populatedMovie;
+        } catch (error) {
+          console.error(`Error populating movie ${movie._id}:`, error.message);
+          return {
+            ...movie,
+            genres: [],
+            directors: [],
+            actors: [],
+            createdBy: null
+          };
+        }
+      })
+    );
+
+    const transformedMovies = movies.map(movie => {
+      return {
+        ...movie,
+        posterUrl: movie.posterUrl || movie.poster_url,
+        trailerUrl: movie.trailerUrl || movie.trailer_url,
+        releaseYear: movie.releaseYear || movie.release_year,
+        originalTitle: movie.originalTitle || movie.original_title,
+        averageRating: movie.averageRating || movie.average_score || 0,
+        totalRatings: movie.totalRatings || movie.total_ratings || 0,
+        isActive: movie.isActive !== undefined ? movie.isActive : (movie.is_active !== undefined ? movie.is_active : true)
+      };
+    });
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        movies: transformedMovies,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // @desc    Create movie
 // @route   POST /api/admin/movies
@@ -380,26 +511,52 @@ exports.deleteReview = async (req, res, next) => {
 // @access  Private/Admin
 exports.getDashboardStats = async (req, res, next) => {
   try {
+    const Rating = require('../models/Rating');
     const totalUsers = await User.countDocuments();
     const totalMovies = await Movie.countDocuments();
     const totalReviews = await Review.countDocuments();
-    const totalRatings = await require('../models/Rating').countDocuments();
+    const totalRatings = await Rating.countDocuments();
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const newUsers = await User.countDocuments({
+      createdAt: { $gte: thirtyDaysAgo }
+    });
+    const oldUsers = totalUsers - newUsers;
+
+    const ratingsByDate = await Rating.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000) }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: '%b %d', date: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { _id: 1 } },
+      { $limit: 12 }
+    ]);
+
+    const chartData = ratingsByDate.map(item => ({
+      date: item._id,
+      value: item.count
+    }));
 
     const recentUsers = await User.find()
       .select('username email createdAt')
       .sort('-createdAt')
       .limit(5);
 
-    const recentReviews = await Review.find()
-      .populate('user', 'username')
-      .populate('movie', 'title')
-      .sort('-createdAt')
-      .limit(5);
-
     const topRatedMovies = await Movie.find({ totalRatings: { $gte: 5 } })
       .sort('-averageRating')
       .limit(10)
-      .select('title averageRating totalRatings');
+      .select('title averageRating totalRatings posterUrl');
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
@@ -408,10 +565,12 @@ exports.getDashboardStats = async (req, res, next) => {
           totalUsers,
           totalMovies,
           totalReviews,
-          totalRatings
+          totalRatings,
+          newUsers,
+          oldUsers
         },
+        chartData,
         recentUsers,
-        recentReviews,
         topRatedMovies
       }
     });

@@ -6,6 +6,7 @@ const {
   updateUserRole,
   updateUserStatus,
   deleteUser,
+  getAllMovies,
   createMovie,
   updateMovie,
   deleteMovie,
@@ -32,6 +33,7 @@ router.put('/users/:id/status', validateObjectId('id'), updateUserStatus);
 router.delete('/users/:id', validateObjectId('id'), deleteUser);
 
 // Movie management
+router.get('/movies', getAllMovies);
 router.post('/movies', validateMovie, createMovie);
 router.put('/movies/:id', validateObjectId('id'), validateMovie, updateMovie);
 router.delete('/movies/:id', validateObjectId('id'), deleteMovie);
