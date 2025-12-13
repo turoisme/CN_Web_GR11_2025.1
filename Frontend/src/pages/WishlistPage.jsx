@@ -12,10 +12,31 @@ export default function WishlistPage() {
   const [sortBy, setSortBy] = useState('date-added');
   const [filterGenre, setFilterGenre] = useState('all');
 
-  // Mock data - sẽ thay bằng API call
+  // Load wishlist from localStorage
   useEffect(() => {
-    setTimeout(() => {
-      setWishlist([
+    const loadWishlist = () => {
+      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(savedWishlist);
+      setLoading(false);
+    };
+    
+    // Add small delay for smooth loading effect
+    setTimeout(loadWishlist, 300);
+  }, []);
+
+  // Reload wishlist when window gains focus (to catch updates from other tabs)
+  useEffect(() => {
+    const handleFocus = () => {
+      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+      setWishlist(savedWishlist);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  // Keep mock data as fallback for demo
+  const mockWishlist = [
         {
           id: 1,
           title: 'Avatar',
@@ -60,14 +81,13 @@ export default function WishlistPage() {
           poster: '/placeholder.jpg',
           dateAdded: '2025-11-20'
         }
-      ]);
-      setLoading(false);
-    }, 500);
-  }, []);
+      ];
 
   const handleRemoveFromWishlist = (movieId) => {
     if (window.confirm('Remove this movie from your wishlist?')) {
-      setWishlist(wishlist.filter(movie => movie.id !== movieId));
+      const updatedWishlist = wishlist.filter(movie => movie.id !== movieId);
+      setWishlist(updatedWishlist);
+      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
     }
   };
 

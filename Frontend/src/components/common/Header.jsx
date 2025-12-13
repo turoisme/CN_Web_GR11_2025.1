@@ -2,11 +2,13 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Home, Heart, Bell, Settings, Search, User, LogOut, Menu, X } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
+import LoginSignupModal from '../auth/LoginSignupModal';
 
 export default function Header() {
   const { user, logout } = useContext(AuthContext);
   const [searchQuery, setSearchQuery] = useState('');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
 
   // Debug: Log user state
@@ -85,12 +87,18 @@ export default function Header() {
             </>
           ) : (
             <>
-              <Link to="/login" className="text-gray-700 hover:text-gray-900 font-medium">
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="text-gray-700 hover:text-gray-900 font-medium"
+              >
                 Login
-              </Link>
-              <Link to="/register" className="text-gray-700 hover:text-gray-900 font-medium">
+              </button>
+              <button 
+                onClick={() => setShowAuthModal(true)}
+                className="text-gray-700 hover:text-gray-900 font-medium"
+              >
                 Sign Up
-              </Link>
+              </button>
             </>
           )}
         </div>
@@ -121,13 +129,29 @@ export default function Header() {
               </>
             ) : (
               <>
-                <Link to="/login" className="text-gray-700 hover:text-gray-900">Login</Link>
-                <Link to="/register" className="text-gray-700 hover:text-gray-900">Sign Up</Link>
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-left text-gray-700 hover:text-gray-900"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-left text-gray-700 hover:text-gray-900"
+                >
+                  Sign Up
+                </button>
               </>
             )}
           </nav>
         </div>
       )}
+
+      {/* Login/Signup Modal */}
+      <LoginSignupModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </header>
   );
 }
