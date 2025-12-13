@@ -133,7 +133,10 @@ export default function HomePage() {
                       <Star size={20} className="text-yellow-400" fill="#facc15" />
                       <span className="text-xl font-semibold">{movies[currentSlide % movies.length]?.averageRating?.toFixed(1) || '0.0'}</span>
                     </div>
-                    <button className="bg-red-600 text-white px-7 py-3 flex items-center gap-2 hover:bg-red-700 transition rounded-md mt-4">
+                    <button 
+                      onClick={() => navigate(`/movie/${movies[currentSlide % movies.length]?._id}`)}
+                      className="bg-red-600 text-white px-7 py-3 flex items-center gap-2 hover:bg-red-700 transition rounded-md mt-4"
+                    >
                       <Play size={20} fill="white" />
                       <span className="font-medium">Watch Trailer</span>
                     </button>

@@ -469,9 +469,9 @@ export default function MovieDetailPage() {
         <div className="relative rounded-xl overflow-hidden mb-8 shadow-2xl">
           {/* Backdrop with Gradient Overlay */}
           <div className="relative h-[500px]">
-            {movie?.backdropUrl ? (
+            {movie?.backgroundUrl ? (
               <img 
-                src={movie.backdropUrl} 
+                src={movie.backgroundUrl} 
                 alt={movie?.title} 
                 className="w-full h-full object-cover"
               />
