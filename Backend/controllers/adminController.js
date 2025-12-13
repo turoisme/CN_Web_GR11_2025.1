@@ -318,10 +318,12 @@ exports.getAllMovies = async (req, res, next) => {
 // @access  Private/Admin
 exports.createMovie = async (req, res, next) => {
   try {
+    console.log('CREATE MOVIE - Request Body:', req.body);
     const movieData = {
       ...req.body,
       createdBy: req.user._id
     };
+    console.log('CREATE MOVIE - Movie Data:', movieData);
 
     const movie = await Movie.create(movieData);
 
@@ -345,6 +347,8 @@ exports.createMovie = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateMovie = async (req, res, next) => {
   try {
+    console.log('UPDATE MOVIE - Movie ID:', req.params.id);
+    console.log('UPDATE MOVIE - Request Body:', req.body);
     const movie = await Movie.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -573,6 +577,36 @@ exports.getDashboardStats = async (req, res, next) => {
         recentUsers,
         topRatedMovies
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Upload movie images (poster, background)
+// @route   POST /api/admin/movies/upload-images
+// @access  Private/Admin
+exports.uploadMovieImages = async (req, res, next) => {
+  try {
+    const uploadedUrls = {};
+
+    // Get base URL
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+
+    // Handle poster
+    if (req.files.poster && req.files.poster[0]) {
+      uploadedUrls.posterUrl = `${baseUrl}/uploads/movies/${req.files.poster[0].filename}`;
+    }
+
+    // Handle background
+    if (req.files.background && req.files.background[0]) {
+      uploadedUrls.backgroundUrl = `${baseUrl}/uploads/movies/${req.files.background[0].filename}`;
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Images uploaded successfully',
+      data: uploadedUrls
     });
   } catch (error) {
     next(error);

@@ -13,11 +13,13 @@ const {
   getAllReviews,
   toggleReviewVisibility,
   deleteReview,
-  getDashboardStats
+  getDashboardStats,
+  uploadMovieImages
 } = require('../controllers/adminController');
 const { protect } = require('../middlewares/authMiddleware');
 const { isAdmin } = require('../middlewares/adminMiddleware');
 const { validateObjectId, validateMovie } = require('../middlewares/validationMiddleware');
+const upload = require('../middlewares/uploadMiddleware');
 
 // All admin routes require authentication and admin role
 router.use(protect, isAdmin);
@@ -34,6 +36,13 @@ router.delete('/users/:id', validateObjectId('id'), deleteUser);
 
 // Movie management
 router.get('/movies', getAllMovies);
+
+// Upload movie images - MUST be before /:id routes
+router.post('/movies/upload-images', upload.fields([
+  { name: 'poster', maxCount: 1 },
+  { name: 'background', maxCount: 1 }
+]), uploadMovieImages);
+
 router.post('/movies', validateMovie, createMovie);
 router.put('/movies/:id', validateObjectId('id'), validateMovie, updateMovie);
 router.delete('/movies/:id', validateObjectId('id'), deleteMovie);

@@ -68,5 +68,15 @@ export const adminService = {
   deleteMovie: async (movieId) => {
     const response = await api.delete(`/admin/movies/${movieId}`);
     return response;
+  },
+
+  // Upload movie images (poster, backdrop, screenshots)
+  uploadMovieImages: async (formData) => {
+    const response = await api.post('/admin/movies/upload-images', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response;
   }
 };
