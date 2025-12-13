@@ -239,7 +239,7 @@ exports.getTopRatedMovies = async (req, res, next) => {
 
     const movies = await Movie.find({ 
       isActive: true,
-      totalRatings: { $gte: 10 } // At least 10 ratings
+      totalRatings: { $gte: 1 } // At least 1 rating (reduced for development)
     })
       .populate('genres', 'name')
       .sort('-averageRating')

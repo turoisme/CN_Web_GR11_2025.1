@@ -199,9 +199,9 @@ export default function HomePage() {
                   [1, 2, 3].map((item) => (
                     <div 
                       key={item} 
-                      className="flex-1 aspect-square bg-white flex items-center justify-center shadow-sm"
+                      className="flex-1 aspect-[2/3] bg-white flex items-center justify-center shadow-sm rounded-lg"
                     >
-                      <div className="animate-pulse bg-gray-200 w-full h-full"></div>
+                      <div className="animate-pulse bg-gray-200 w-full h-full rounded-lg"></div>
                     </div>
                   ))
                 ) : topRatedMovies.length === 0 ? (
@@ -213,22 +213,52 @@ export default function HomePage() {
                     <div 
                       key={movie._id} 
                       onClick={() => navigate(`/movie/${movie._id}`)}
-                      className="flex-1 aspect-square bg-white flex items-center justify-center shadow-sm cursor-pointer hover:opacity-80 transition overflow-hidden"
+                      className="flex-1 cursor-pointer group"
                     >
-                      {movie.posterUrl ? (
-                        <img 
-                          src={movie.posterUrl} 
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-gray-300">
-                          <svg width="100%" height="100%" viewBox="0 0 100 100" className="w-20 h-20">
-                            <line x1="20" y1="20" x2="80" y2="80" stroke="currentColor" strokeWidth="8" />
-                            <line x1="80" y1="20" x2="20" y2="80" stroke="currentColor" strokeWidth="8" />
-                          </svg>
+                      {/* Movie Poster Card */}
+                      <div className="aspect-[2/3] bg-white shadow-lg rounded-lg overflow-hidden relative group-hover:shadow-2xl transition-all duration-300">
+                        {movie.posterUrl ? (
+                          <>
+                            <img 
+                              src={movie.posterUrl} 
+                              alt={movie.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {/* Rating Badge */}
+                            <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                              <Star size={16} className="text-yellow-400" fill="#facc15" />
+                              <span className="text-white font-bold text-sm">
+                                {movie.averageRating?.toFixed(1) || '0.0'}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <div className="text-gray-300">
+                              <svg width="80" height="80" viewBox="0 0 100 100">
+                                <line x1="20" y1="20" x2="80" y2="80" stroke="currentColor" strokeWidth="8" />
+                                <line x1="80" y1="20" x2="20" y2="80" stroke="currentColor" strokeWidth="8" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Movie Info */}
+                      <div className="mt-3">
+                        <h3 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-600 transition">
+                          {movie.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                          <span>{movie.releaseYear || 'N/A'}</span>
+                          {movie.ratingCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span>{movie.ratingCount} ratings</span>
+                            </>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))
                 )}
@@ -238,52 +268,81 @@ export default function HomePage() {
                 className="flex items-center gap-2 text-gray-800 hover:text-gray-600 transition"
               >
                 <Menu size={18} strokeWidth={2} />
-                <span className="font-semibold text-sm">List</span>
+                <span className="font-semibold text-sm">View All Popular</span>
               </button>
             </div>
-            <h3 className="text-xl font-semibold mt-4 text-gray-900">What to watch in November</h3>
+            <h3 className="text-xl font-semibold mt-4 text-gray-900">What to watch this month</h3>
           </div>
 
           {/* Best Rated */}
           <div>
-            <h2 className="text-3xl font-bold mb-6 text-gray-900">Best Rated</h2>
+            <h2 className="text-3xl font-bold mb-6 text-gray-900">Best Rated Films</h2>
             <div className="bg-gray-200 p-8 rounded-lg">
               <div className="flex justify-between gap-5 mb-5">
                 {loading ? (
                   [1, 2, 3].map((item) => (
                     <div 
                       key={item} 
-                      className="flex-1 aspect-square bg-white flex items-center justify-center shadow-sm"
+                      className="flex-1 aspect-[2/3] bg-white flex items-center justify-center shadow-sm rounded-lg"
                     >
-                      <div className="animate-pulse bg-gray-200 w-full h-full"></div>
+                      <div className="animate-pulse bg-gray-200 w-full h-full rounded-lg"></div>
                     </div>
                   ))
-                ) : movies.length === 0 ? (
+                ) : topRatedMovies.length === 0 ? (
                   <div className="flex-1 text-center text-gray-500 py-8">
-                    No movies available
+                    No rated movies available yet
                   </div>
                 ) : (
-                  // Show highest rated movies (sorted by rating descending)
-                  [...movies].sort((a, b) => (b.averageRating || 0) - (a.averageRating || 0)).slice(0, 3).map((movie) => (
+                  topRatedMovies.slice(0, 3).map((movie) => (
                     <div 
                       key={movie._id} 
                       onClick={() => navigate(`/movie/${movie._id}`)}
-                      className="flex-1 aspect-square bg-white flex items-center justify-center shadow-sm cursor-pointer hover:opacity-80 transition overflow-hidden"
+                      className="flex-1 cursor-pointer group"
                     >
-                      {movie.posterUrl ? (
-                        <img 
-                          src={movie.posterUrl} 
-                          alt={movie.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="text-gray-300">
-                          <svg width="100%" height="100%" viewBox="0 0 100 100" className="w-20 h-20">
-                            <line x1="20" y1="20" x2="80" y2="80" stroke="currentColor" strokeWidth="8" />
-                            <line x1="80" y1="20" x2="20" y2="80" stroke="currentColor" strokeWidth="8" />
-                          </svg>
+                      {/* Movie Poster Card */}
+                      <div className="aspect-[2/3] bg-white shadow-lg rounded-lg overflow-hidden relative group-hover:shadow-2xl transition-all duration-300">
+                        {movie.posterUrl ? (
+                          <>
+                            <img 
+                              src={movie.posterUrl} 
+                              alt={movie.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            />
+                            {/* Rating Badge */}
+                            <div className="absolute top-3 right-3 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                              <Star size={16} className="text-yellow-400" fill="#facc15" />
+                              <span className="text-white font-bold text-sm">
+                                {movie.averageRating?.toFixed(1) || '0.0'}
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                            <div className="text-gray-300">
+                              <svg width="80" height="80" viewBox="0 0 100 100">
+                                <line x1="20" y1="20" x2="80" y2="80" stroke="currentColor" strokeWidth="8" />
+                                <line x1="80" y1="20" x2="20" y2="80" stroke="currentColor" strokeWidth="8" />
+                              </svg>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Movie Info */}
+                      <div className="mt-3">
+                        <h3 className="font-bold text-gray-900 text-base line-clamp-1 group-hover:text-blue-600 transition">
+                          {movie.title}
+                        </h3>
+                        <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
+                          <span>{movie.releaseYear || 'N/A'}</span>
+                          {movie.ratingCount > 0 && (
+                            <>
+                              <span>•</span>
+                              <span>{movie.ratingCount} ratings</span>
+                            </>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))
                 )}
@@ -293,10 +352,10 @@ export default function HomePage() {
                 className="flex items-center gap-2 text-gray-800 hover:text-gray-600 transition"
               >
                 <Menu size={18} strokeWidth={2} />
-                <span className="font-semibold text-sm">List</span>
+                <span className="font-semibold text-sm">View All Top Rated</span>
               </button>
             </div>
-            <h3 className="text-xl font-semibold mt-4 text-gray-900">Highest rated movies</h3>
+            <h3 className="text-xl font-semibold mt-4 text-gray-900">Highest rated movies on FilmRate</h3>
           </div>
         </div>
       </section>

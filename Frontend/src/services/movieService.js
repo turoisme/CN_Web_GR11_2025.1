@@ -20,10 +20,8 @@ const movieService = {
   },
 
   // Search movies
-  searchMovies: async (query, params) => {
-    const response = await api.get('/movies/search', { 
-      params: { query, ...params } 
-    });
+  searchMovies: async (params) => {
+    const response = await api.get('/movies/search', { params });
     return response;
   },
 
