@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
     return response.data;
   };
 
-  const register = async (userData) => {
-    const response = await authService.register(userData);
+  const register = async (username, email, password) => {
+    const response = await authService.register({ username, email, password });
     // Backend returns { success, message, data: { user, token } }
     const { user, token } = response.data;
     setUser(user);
