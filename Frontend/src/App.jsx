@@ -7,6 +7,9 @@ import AdminPage from './pages/AdminPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import MovieReviewPage from './pages/MovieReviewPage';
 import WishlistPage from './pages/WishlistPage';
+import ProfilePage from './pages/ProfilePage';
+import ProfileEditPage from './pages/ProfileEditPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   return (
@@ -19,6 +22,9 @@ function App() {
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/movie/:id" element={<MovieDetailPage />} />
               <Route path="/movie/:id/reviews" element={<MovieReviewPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />
+              <Route path="/profile/change-password" element={<ChangePasswordPage />} />
               <Route path="/admin/*" element={<AdminPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
