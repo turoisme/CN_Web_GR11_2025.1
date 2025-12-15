@@ -316,7 +316,14 @@ exports.getWatchlist = async (req, res, next) => {
     const total = await Watchlist.countDocuments({ user: userId });
 
     const watchlist = await Watchlist.find({ user: userId })
-      .populate('movie', 'title posterUrl releaseYear averageRating genres')
+      .populate({
+        path: 'movie',
+        select: 'title posterUrl releaseYear averageRating totalRatings duration genres',
+        populate: {
+          path: 'genres',
+          select: 'name'
+        }
+      })
       .sort('-addedAt')
       .limit(limit)
       .skip((page - 1) * limit);

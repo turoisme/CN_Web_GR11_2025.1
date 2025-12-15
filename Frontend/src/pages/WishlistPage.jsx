@@ -1,93 +1,109 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Star, Trash2, Filter, Grid, List } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
+import { AuthContext } from '../context/AuthContext';
+import listService from '../services/listService';
 
 export default function WishlistPage() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [sortBy, setSortBy] = useState('date-added');
   const [filterGenre, setFilterGenre] = useState('all');
 
-  // Load wishlist from localStorage
+  // Load wishlist from API
   useEffect(() => {
-    const loadWishlist = () => {
-      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setWishlist(savedWishlist);
-      setLoading(false);
+    const loadWishlist = async () => {
+      if (!user) {
+        setLoading(false);
+        setWishlist([]);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const response = await listService.getWatchlist();
+        
+        // Extract watchlist from response
+        const watchlistData = response?.data?.watchlist || [];
+        
+        // Transform API data to match component's expected format
+        const transformedMovies = watchlistData.map(item => {
+          console.log('Movie item:', item.movie);
+          console.log('Genres:', item.movie.genres);
+          return {
+            id: item.movie._id,
+            title: item.movie.title,
+            year: item.movie.releaseYear,
+            duration: item.movie.duration ? `${Math.floor(item.movie.duration / 60)}h ${item.movie.duration % 60}m` : 'N/A',
+            rating: item.movie.averageRating || 0,
+            ratingCount: item.movie.totalRatings || 0,
+            genres: Array.isArray(item.movie.genres) 
+              ? item.movie.genres.map(g => typeof g === 'string' ? g : g.name).filter(Boolean)
+              : [],
+            poster: item.movie.posterUrl,
+            dateAdded: item.addedAt
+          };
+        });
+        
+        console.log('Transformed movies:', transformedMovies);
+        setWishlist(transformedMovies);
+      } catch (error) {
+        console.error('Error loading wishlist:', error);
+        setWishlist([]);
+      } finally {
+        setLoading(false);
+      }
     };
     
-    // Add small delay for smooth loading effect
-    setTimeout(loadWishlist, 300);
-  }, []);
+    loadWishlist();
+  }, [user]);
 
-  // Reload wishlist when window gains focus (to catch updates from other tabs)
+  // Reload wishlist when window gains focus
   useEffect(() => {
-    const handleFocus = () => {
-      const savedWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
-      setWishlist(savedWishlist);
+    const handleFocus = async () => {
+      if (user) {
+        try {
+          const response = await listService.getWatchlist();
+          const watchlistData = response?.data?.watchlist || [];
+          const transformedMovies = watchlistData.map(item => ({
+            id: item.movie._id,
+            title: item.movie.title,
+            year: item.movie.releaseYear,
+            duration: item.movie.duration ? `${Math.floor(item.movie.duration / 60)}h ${item.movie.duration % 60}m` : 'N/A',
+            rating: item.movie.averageRating || 0,
+            ratingCount: item.movie.totalRatings || 0,
+            genres: Array.isArray(item.movie.genres) 
+              ? item.movie.genres.map(g => typeof g === 'string' ? g : g.name).filter(Boolean)
+              : [],
+            poster: item.movie.posterUrl,
+            dateAdded: item.addedAt
+          }));
+          setWishlist(transformedMovies);
+        } catch (error) {
+          console.error('Error reloading wishlist:', error);
+        }
+      }
     };
     
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [user]);
 
-  // Keep mock data as fallback for demo
-  const mockWishlist = [
-        {
-          id: 1,
-          title: 'Avatar',
-          year: 2009,
-          duration: '2h30m',
-          rating: 7.9,
-          ratingCount: 1000,
-          genres: ['Fantasy', 'Action', 'Adventure'],
-          poster: '/placeholder.jpg',
-          dateAdded: '2025-12-01'
-        },
-        {
-          id: 2,
-          title: 'Inception',
-          year: 2010,
-          duration: '2h28m',
-          rating: 8.8,
-          ratingCount: 2500,
-          genres: ['Sci-Fi', 'Thriller', 'Action'],
-          poster: '/placeholder.jpg',
-          dateAdded: '2025-11-28'
-        },
-        {
-          id: 3,
-          title: 'The Dark Knight',
-          year: 2008,
-          duration: '2h32m',
-          rating: 9.0,
-          ratingCount: 3000,
-          genres: ['Action', 'Crime', 'Drama'],
-          poster: '/placeholder.jpg',
-          dateAdded: '2025-11-25'
-        },
-        {
-          id: 4,
-          title: 'Interstellar',
-          year: 2014,
-          duration: '2h49m',
-          rating: 8.6,
-          ratingCount: 2200,
-          genres: ['Sci-Fi', 'Drama', 'Adventure'],
-          poster: '/placeholder.jpg',
-          dateAdded: '2025-11-20'
-        }
-      ];
-
-  const handleRemoveFromWishlist = (movieId) => {
+  const handleRemoveFromWishlist = async (movieId) => {
     if (window.confirm('Remove this movie from your wishlist?')) {
-      const updatedWishlist = wishlist.filter(movie => movie.id !== movieId);
-      setWishlist(updatedWishlist);
-      localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
+      try {
+        await listService.removeFromWatchlist(movieId);
+        const updatedWishlist = wishlist.filter(movie => movie.id !== movieId);
+        setWishlist(updatedWishlist);
+      } catch (error) {
+        console.error('Error removing from wishlist:', error);
+        alert('Failed to remove from wishlist');
+      }
     }
   };
 
@@ -98,12 +114,20 @@ export default function WishlistPage() {
         onClick={() => navigate(`/movie/${movie.id}`)}
         className="relative aspect-[2/3] bg-gray-200 cursor-pointer overflow-hidden"
       >
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-          <svg width="120" height="120" viewBox="0 0 120 120">
-            <line x1="30" y1="30" x2="90" y2="90" stroke="currentColor" strokeWidth="12" />
-            <line x1="90" y1="30" x2="30" y2="90" stroke="currentColor" strokeWidth="12" />
-          </svg>
-        </div>
+        {movie.poster ? (
+          <img 
+            src={movie.poster} 
+            alt={movie.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <line x1="30" y1="30" x2="90" y2="90" stroke="currentColor" strokeWidth="12" />
+              <line x1="90" y1="30" x2="30" y2="90" stroke="currentColor" strokeWidth="12" />
+            </svg>
+          </div>
+        )}
         {/* Hover overlay */}
         <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition flex items-center justify-center">
           <span className="text-white font-semibold opacity-0 group-hover:opacity-100 transition">View Details</span>
@@ -154,12 +178,20 @@ export default function WishlistPage() {
         onClick={() => navigate(`/movie/${movie.id}`)}
         className="relative w-32 flex-shrink-0 aspect-[2/3] bg-gray-200 cursor-pointer rounded overflow-hidden"
       >
-        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-          <svg width="60" height="60" viewBox="0 0 60 60">
-            <line x1="15" y1="15" x2="45" y2="45" stroke="currentColor" strokeWidth="6" />
-            <line x1="45" y1="15" x2="15" y2="45" stroke="currentColor" strokeWidth="6" />
-          </svg>
-        </div>
+        {movie.poster ? (
+          <img 
+            src={movie.poster} 
+            alt={movie.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              <line x1="15" y1="15" x2="45" y2="45" stroke="currentColor" strokeWidth="6" />
+              <line x1="45" y1="15" x2="15" y2="45" stroke="currentColor" strokeWidth="6" />
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Info */}
