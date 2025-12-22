@@ -520,6 +520,9 @@ exports.getDashboardStats = async (req, res, next) => {
     const totalMovies = await Movie.countDocuments();
     const totalReviews = await Review.countDocuments();
     const totalRatings = await Rating.countDocuments();
+    
+    console.log('Dashboard stats - Total movies:', totalMovies);
+    console.log('Dashboard stats - Total ratings:', totalRatings);
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -529,10 +532,13 @@ exports.getDashboardStats = async (req, res, next) => {
     });
     const oldUsers = totalUsers - newUsers;
 
+    const fifteenDaysAgo = new Date();
+    fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+    
     const ratingsByDate = await Rating.aggregate([
       {
         $match: {
-          createdAt: { $gte: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000) }
+          createdAt: { $gte: fifteenDaysAgo }
         }
       },
       {
@@ -543,24 +549,150 @@ exports.getDashboardStats = async (req, res, next) => {
           count: { $sum: 1 }
         }
       },
-      { $sort: { _id: 1 } },
-      { $limit: 12 }
+      { $sort: { _id: 1 } }
     ]);
 
-    const chartData = ratingsByDate.map(item => ({
-      date: item._id,
-      value: item.count
-    }));
+    const ratingsMap = new Map();
+    ratingsByDate.forEach(item => {
+      const key = item._id.trim();
+      ratingsMap.set(key, item.count);
+    });
+
+    const chartData = [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    for (let i = 14; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = date.getDate();
+      const dateStr = `${monthNames[date.getMonth()]} ${String(day).padStart(2, '0')}`;
+      
+      const count = ratingsMap.get(dateStr) || 0;
+      
+      chartData.push({
+        date: dateStr,
+        value: count
+      });
+    }
+    
+    if (chartData.length !== 15) {
+      console.warn(`Warning: Expected 15 days but got ${chartData.length} days`);
+    }
 
     const recentUsers = await User.find()
       .select('username email createdAt')
       .sort('-createdAt')
       .limit(5);
+    
+    let topRatedMovies = [];
+    
+    try {
+      const topRatedMoviesAggregation = await Rating.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: thirtyDaysAgo }
+          }
+        },
+        {
+          $group: {
+            _id: '$movie',
+            recentRatingCount: { $sum: 1 }
+          }
+        },
+        {
+          $sort: { recentRatingCount: -1 }
+        },
+        {
+          $limit: 10
+        },
+        {
+          $lookup: {
+            from: 'movies',
+            localField: '_id',
+            foreignField: '_id',
+            as: 'movieData'
+          }
+        },
+        {
+          $unwind: '$movieData'
+        },
+        {
+          $project: {
+            _id: '$movieData._id',
+            title: '$movieData.title',
+            averageRating: '$movieData.averageRating',
+            totalRatings: '$movieData.totalRatings',
+            posterUrl: '$movieData.posterUrl',
+            recentRatingCount: 1
+          }
+        }
+      ]);
 
-    const topRatedMovies = await Movie.find({ totalRatings: { $gte: 5 } })
-      .sort('-averageRating')
-      .limit(10)
-      .select('title averageRating totalRatings posterUrl');
+      console.log('Top rated movies aggregation result:', topRatedMoviesAggregation);
+      console.log('Aggregation length:', topRatedMoviesAggregation ? topRatedMoviesAggregation.length : 0);
+      
+      if (topRatedMoviesAggregation && topRatedMoviesAggregation.length > 0) {
+        topRatedMovies = topRatedMoviesAggregation.map(item => ({
+          _id: item._id ? item._id.toString() : null,
+          title: item.title || 'Untitled',
+          averageRating: item.averageRating || 0,
+          totalRatings: item.totalRatings || 0,
+          posterUrl: item.posterUrl || '',
+          recentRatingCount: item.recentRatingCount || 0
+        }));
+        console.log('Mapped from aggregation:', topRatedMovies.length);
+      }
+    } catch (error) {
+      console.error('Error in aggregation:', error);
+    }
+    
+    if (!topRatedMovies || topRatedMovies.length === 0) {
+      console.log('No recent ratings found, using fallback - getting all movies');
+      try {
+        const movieCount = await Movie.countDocuments();
+        console.log('Total movies in database:', movieCount);
+        
+        if (movieCount > 0) {
+          const allMovies = await Movie.find({})
+            .sort('-totalRatings -averageRating -createdAt')
+            .limit(10)
+            .select('title averageRating totalRatings posterUrl _id')
+            .lean();
+          
+          console.log('All movies query result count:', allMovies ? allMovies.length : 0);
+          console.log('All movies query result:', JSON.stringify(allMovies, null, 2));
+          
+          if (allMovies && allMovies.length > 0) {
+            topRatedMovies = allMovies.map(movie => ({
+              _id: movie._id ? movie._id.toString() : null,
+              title: movie.title || 'Untitled',
+              averageRating: movie.averageRating || 0,
+              totalRatings: movie.totalRatings || 0,
+              posterUrl: movie.posterUrl || '',
+              recentRatingCount: 0
+            }));
+            console.log('Mapped movies:', topRatedMovies.length);
+          } else {
+            console.log('Query returned empty array even though count > 0');
+          }
+        } else {
+          console.log('No movies found in database at all - database is empty');
+        }
+      } catch (error) {
+        console.error('Error in fallback query:', error);
+        console.error('Error stack:', error.stack);
+      }
+    }
+    
+    console.log('Final top rated movies count:', topRatedMovies ? topRatedMovies.length : 0);
+    console.log('Final top rated movies:', JSON.stringify(topRatedMovies, null, 2));
+    
+    if (!topRatedMovies || topRatedMovies.length === 0) {
+      console.warn('WARNING: No movies to return! Database may be empty or query failed.');
+    }
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
@@ -575,7 +707,7 @@ exports.getDashboardStats = async (req, res, next) => {
         },
         chartData,
         recentUsers,
-        topRatedMovies
+        topRatedMovies: topRatedMovies || []
       }
     });
   } catch (error) {
