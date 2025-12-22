@@ -1,0 +1,17 @@
+{
+  "name": "cn_web_gr11_2025.1-monorepo",
+  "version": "1.0.0",
+  "description": "Monorepo for Frontend and Backend",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start-backend\" \"npm run start-frontend\"",
+    "start-backend": "npm --prefix Backend start",
+    "start-frontend": "npm --prefix Frontend start"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
