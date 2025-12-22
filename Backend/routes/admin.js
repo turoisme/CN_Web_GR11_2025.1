@@ -13,6 +13,8 @@ const {
   getAllReviews,
   toggleReviewVisibility,
   deleteReview,
+  getAllRatings,
+  deleteRating,
   getDashboardStats,
   uploadMovieImages
 } = require('../controllers/adminController');
@@ -51,5 +53,9 @@ router.delete('/movies/:id', validateObjectId('id'), deleteMovie);
 router.get('/reviews', getAllReviews);
 router.put('/reviews/:id/visibility', validateObjectId('id'), toggleReviewVisibility);
 router.delete('/reviews/:id', validateObjectId('id'), deleteReview);
+
+// Rating management
+router.get('/ratings', getAllRatings);
+router.delete('/ratings/:id', validateObjectId('id'), deleteRating);
 
 module.exports = router;

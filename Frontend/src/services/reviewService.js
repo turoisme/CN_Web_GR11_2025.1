@@ -31,6 +31,12 @@ const reviewService = {
     return response;
   },
 
+  // Delete a rating
+  deleteRating: async (movieId) => {
+    const response = await api.delete(`/reviews/rating/${movieId}`);
+    return response;
+  },
+
   // Vote on a review
   voteReview: async (reviewId, voteType) => {
     const response = await api.post(`/reviews/${reviewId}/vote`, { voteType });

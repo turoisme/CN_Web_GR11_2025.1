@@ -6,6 +6,7 @@ const {
   getMovieReviews,
   updateReview,
   deleteReview,
+  deleteRating,
   voteReview
 } = require('../controllers/reviewController');
 const { protect } = require('../middlewares/authMiddleware');
@@ -19,6 +20,7 @@ router.get('/movie/:movieId', validateObjectId('movieId'), getMovieReviews);
 router.use(protect);
 
 router.post('/rating', createLimiter, createRating);
+router.delete('/rating/:movieId', validateObjectId('movieId'), deleteRating);
 router.post('/', createLimiter, validateReview, createReview);
 router.put('/:id', validateObjectId('id'), validateReview, updateReview);
 router.delete('/:id', validateObjectId('id'), deleteReview);

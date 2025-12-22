@@ -1,10 +1,11 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Home, Film, Users, Settings, ChevronDown, Bell, Search, LogOut } from 'lucide-react';
+import { Home, Film, Users, Settings, ChevronDown, Bell, Search, LogOut, MessageSquare } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 import UserManagement from '../components/admin/UserManagement';
 import MovieManagement from '../components/admin/MovieManagement';
 import Dashboard from '../components/admin/Dashboard';
+import ReviewModeration from '../components/admin/ReviewModeration';
 
 export default function AdminDashboard() {
   const { user, logout } = useContext(AuthContext);
@@ -62,6 +63,17 @@ export default function AdminDashboard() {
           title="Users"
         >
           <Users size={24} />
+        </button>
+        <button 
+          onClick={() => setCurrentView('reviews')}
+          className={`w-12 h-12 rounded-lg flex items-center justify-center transition ${
+            currentView === 'reviews' 
+              ? 'bg-gray-800 text-white' 
+              : 'text-gray-700 hover:bg-gray-300'
+          }`}
+          title="Reviews & Ratings"
+        >
+          <MessageSquare size={24} />
         </button>
         <button className="w-12 h-12 text-gray-700 hover:bg-gray-300 rounded-lg flex items-center justify-center transition" title="Settings">
           <Settings size={24} />
@@ -129,6 +141,7 @@ export default function AdminDashboard() {
           {currentView === 'dashboard' && <Dashboard user={user} setCurrentView={setCurrentView} />}
           {currentView === 'users' && <UserManagement />}
           {currentView === 'movies' && <MovieManagement />}
+          {currentView === 'reviews' && <ReviewModeration />}
         </main>
       </div>
     </div>

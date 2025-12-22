@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Play, Plus, ChevronRight, Check, X } from 'lucide-react';
+import { Star, Play, Plus, ChevronRight, Check, X, Trash2 } from 'lucide-react';
 import Header from '../components/common/Header';
 import Footer from '../components/common/Footer';
 import Loading from '../components/common/Loading';
@@ -261,6 +261,40 @@ export default function MovieDetailPage() {
     } catch (err) {
       console.error('Error removing rating:', err);
       alert(err.message || 'Failed to remove rating');
+    }
+  };
+
+  const handleDeleteReview = async (reviewId) => {
+    const isAdmin = user?.role === 'admin';
+    const confirmMessage = isAdmin 
+      ? 'Bạn có chắc chắn muốn xóa review này? (Admin)' 
+      : 'Bạn có chắc chắn muốn xóa review này?';
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      await reviewService.deleteReview(reviewId);
+      
+      setReviews(reviews.filter(r => r._id !== reviewId));
+      
+      if (savedReview && savedReview._id === reviewId) {
+        setSavedReview(null);
+        setUserRating(null);
+      }
+
+      const movieResponse = await movieService.getMovieById(id);
+      if (movieResponse && movieResponse.success) {
+        setMovie(movieResponse.data?.movie);
+      }
+      
+      if (isAdmin) {
+        alert('Đã xóa review thành công (Admin)');
+      }
+    } catch (err) {
+      console.error('Error deleting review:', err);
+      alert(err.message || 'Failed to delete review');
     }
   };
 
@@ -682,8 +716,19 @@ export default function MovieDetailPage() {
               {reviews.slice(0, 6).map((review, index) => (
                 <div 
                   key={review._id || index} 
-                  className="bg-gray-50 p-6 rounded-lg hover:shadow-lg transition-shadow border border-gray-200"
+                  className="bg-gray-50 p-6 rounded-lg hover:shadow-lg transition-shadow border border-gray-200 relative"
                 >
+                  {/* Delete button for own reviews or admin */}
+                  {user && (review.user?._id === user._id || user.role === 'admin') && (
+                    <button
+                      onClick={() => handleDeleteReview(review._id)}
+                      className="absolute top-4 right-4 p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                      title={user.role === 'admin' ? 'Admin: Xóa review' : 'Xóa review'}
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  )}
+
                   {/* User Info */}
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md">
