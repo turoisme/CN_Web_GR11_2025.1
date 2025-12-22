@@ -242,6 +242,36 @@ exports.deleteReview = async (req, res, next) => {
   }
 };
 
+// @desc    Delete rating
+// @route   DELETE /api/reviews/rating/:movieId
+// @access  Private
+exports.deleteRating = async (req, res, next) => {
+  try {
+    const { movieId } = req.params;
+    const userId = req.user._id;
+
+    const rating = await Rating.findOne({ user: userId, movie: movieId });
+
+    if (!rating) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Rating not found'
+      });
+    }
+
+    await rating.deleteOne();
+
+    await recalculateMovieRating(movieId);
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Rating deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Vote on review (helpful/unhelpful)
 // @route   POST /api/reviews/:id/vote
 // @access  Private

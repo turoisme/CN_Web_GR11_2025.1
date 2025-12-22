@@ -49,6 +49,17 @@ export const adminService = {
     return response;
   },
 
+  // Rating management
+  getAllRatings: async (params) => {
+    const response = await api.get('/admin/ratings', { params });
+    return response;
+  },
+
+  deleteRating: async (ratingId) => {
+    const response = await api.delete(`/admin/ratings/${ratingId}`);
+    return response;
+  },
+
   // Movie management
   getAllMovies: async () => {
     const response = await api.get('/admin/movies');

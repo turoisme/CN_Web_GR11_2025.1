@@ -510,6 +510,80 @@ exports.deleteReview = async (req, res, next) => {
   }
 };
 
+// @desc    Get all ratings (with filters)
+// @route   GET /api/admin/ratings
+// @access  Private/Admin
+exports.getAllRatings = async (req, res, next) => {
+  try {
+    const { page, limit } = validatePaginationParams(
+      req.query.page,
+      req.query.limit
+    );
+    const { movieId, userId } = req.query;
+    const Rating = require('../models/Rating');
+
+    const filter = {};
+    if (movieId) filter.movie = movieId;
+    if (userId) filter.user = userId;
+
+    const total = await Rating.countDocuments(filter);
+
+    const ratings = await Rating.find(filter)
+      .populate('user', 'username email')
+      .populate('movie', 'title posterUrl')
+      .sort('-createdAt')
+      .limit(limit)
+      .skip((page - 1) * limit);
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      data: {
+        ratings,
+        pagination: {
+          page,
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Delete rating
+// @route   DELETE /api/admin/ratings/:id
+// @access  Private/Admin
+exports.deleteRating = async (req, res, next) => {
+  try {
+    const Rating = require('../models/Rating');
+    const rating = await Rating.findById(req.params.id);
+
+    if (!rating) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        message: 'Rating not found'
+      });
+    }
+
+    const movieId = rating.movie;
+    await rating.deleteOne();
+
+    const recalculateMovieRating = require('./reviewController').recalculateMovieRating;
+    if (recalculateMovieRating) {
+      await recalculateMovieRating(movieId);
+    }
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: 'Rating deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get dashboard statistics
 // @route   GET /api/admin/stats
 // @access  Private/Admin
