@@ -48,7 +48,14 @@ export default function ProfilePage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 mb-6 flex-wrap">
+          <button
+            onClick={() => navigate('/')}
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          >
+            <span className="text-lg leading-none">←</span>
+            Về trang chủ
+          </button>
           {profile.avatar ? (
             <img
               src={profile.avatar}

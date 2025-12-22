@@ -46,12 +46,13 @@ export default function ChangePasswordPage() {
   return (
     <div className="max-w-2xl mx-auto p-6">
       <div className="bg-white shadow rounded-lg p-6 space-y-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <button
             onClick={() => navigate(-1)}
-            className="text-sm text-gray-600 hover:text-gray-900 underline"
+            className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
           >
-            ← Quay lại
+            <span className="text-lg leading-none">←</span>
+            Quay lại
           </button>
           <h1 className="text-2xl font-bold text-gray-900">Đổi mật khẩu</h1>
         </div>

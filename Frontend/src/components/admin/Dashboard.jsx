@@ -4,8 +4,8 @@ import { adminService } from '../../services/adminService';
 
 export default function Dashboard({ user, setCurrentView }) {
   const [timeFilter, setTimeFilter] = useState('This week');
-  const [users, setUsers] = useState([]);
   const [stats, setStats] = useState(null);
+  const [users, setUsers] = useState([]);
   const [topMovies, setTopMovies] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -14,19 +14,33 @@ export default function Dashboard({ user, setCurrentView }) {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [usersData, statsData] = await Promise.all([
-          adminService.getAllUsers(),
-          adminService.getDashboardStats()
-        ]);
-        
-        setUsers(usersData.data?.users || []);
-        if (statsData.data) {
-          setStats(statsData.data.stats || null);
-          setTopMovies(statsData.data.topRatedMovies || []);
-          setChartData(statsData.data.chartData || []);
+        const statsData = await adminService.getDashboardStats();
+
+        if (statsData && statsData.data) {
+          const { stats: statsInfo, chartData, recentUsers, topRatedMovies } = statsData.data;
+
+          console.log('Top rated movies received:', topRatedMovies);
+          console.log('Top rated movies type:', typeof topRatedMovies);
+          console.log('Top rated movies is array:', Array.isArray(topRatedMovies));
+          console.log('Top rated movies length:', topRatedMovies ? topRatedMovies.length : 0);
+
+          setStats(statsInfo || null);
+          setChartData(Array.isArray(chartData) ? chartData : []);
+          setUsers(Array.isArray(recentUsers) ? recentUsers : []);
+          setTopMovies(Array.isArray(topRatedMovies) ? topRatedMovies : []);
+        } else {
+          console.warn('No data received from API');
+          setStats(null);
+          setChartData([]);
+          setUsers([]);
+          setTopMovies([]);
         }
       } catch (error) {
         console.error('Error fetching admin data:', error);
+        setStats(null);
+        setChartData([]);
+        setUsers([]);
+        setTopMovies([]);
       } finally {
         setLoading(false);
       }
@@ -56,7 +70,31 @@ export default function Dashboard({ user, setCurrentView }) {
   const circumference = 2 * Math.PI * 40;
   const offset = circumference - (piePercentage / 100) * circumference;
 
-  const maxValue = chartData.length > 0 ? Math.max(...chartData.map(d => d.value), 1) : 1;
+  const rawMaxValue = chartData.length > 0 
+    ? Math.max(...chartData.map(d => Number(d.value) || 0), 1) 
+    : 1;
+  
+  const roundUpToNiceNumber = (num) => {
+    if (num <= 0) return 1;
+    if (num <= 10) return 10;
+    if (num <= 20) return 20;
+    if (num <= 50) return 50;
+    if (num <= 100) return 100;
+    if (num <= 200) return 200;
+    if (num <= 500) return 500;
+    if (num <= 1000) return 1000;
+    return Math.ceil(num / 100) * 100;
+  };
+  
+  const maxValue = roundUpToNiceNumber(rawMaxValue);
+  
+  const formatYAxisLabel = (value) => {
+    if (value === 0) return '0';
+    if (maxValue >= 1000) {
+      return `${(value / 1000).toFixed(1)}K`;
+    }
+    return value.toString();
+  };
 
   const getCurrentDate = () => {
     const date = new Date();
@@ -107,13 +145,13 @@ export default function Dashboard({ user, setCurrentView }) {
           <div className="flex items-center justify-center gap-16">
             <div className="relative w-64 h-64">
               <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#94a3b8" strokeWidth="20" />
+                <circle cx="50" cy="50" r="40" fill="none" stroke="#60a5fa" strokeWidth="20" />
                 <circle 
                   cx="50" 
                   cy="50" 
                   r="40" 
                   fill="none" 
-                  stroke="#64748b" 
+                  stroke="#2563eb" 
                   strokeWidth="20"
                   strokeDasharray={circumference}
                   strokeDashoffset={offset}
@@ -126,11 +164,11 @@ export default function Dashboard({ user, setCurrentView }) {
             </div>
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-gray-300 rounded-full"></div>
+                <div className="w-4 h-4 bg-blue-400 rounded-full"></div>
                 <span className="font-medium">New user</span>
               </div>
               <div className="flex items-center gap-3">
-                <div className="w-4 h-4 bg-gray-600 rounded-full"></div>
+                <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
                 <span className="font-medium">Old user</span>
               </div>
             </div>
@@ -139,29 +177,61 @@ export default function Dashboard({ user, setCurrentView }) {
 
         <div className="bg-white p-8 rounded-lg shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">New ratings</h2>
-          <div className="relative h-80">
-            <div className="absolute left-0 top-0 bottom-8 flex flex-col justify-between text-xs text-gray-500">
-              <span>{Math.ceil(maxValue / 1000)}K</span>
-              <span>{Math.ceil(maxValue * 0.8 / 1000)}K</span>
-              <span>{Math.ceil(maxValue * 0.6 / 1000)}K</span>
-              <span>{Math.ceil(maxValue * 0.4 / 1000)}K</span>
-              <span>{Math.ceil(maxValue * 0.2 / 1000)}K</span>
-              <span>0</span>
-            </div>
-            <div className="ml-12 h-full flex items-end justify-between gap-2">
-              {chartData.length > 0 ? (
-                chartData.map((item, index) => (
-                  <div key={index} className="flex-1 flex flex-col items-center gap-2">
-                    <div 
-                      className="w-full bg-gray-400 rounded-t transition-all hover:bg-gray-500"
-                      style={{ height: `${(item.value / maxValue) * 100}%` }}
-                    ></div>
-                    <span className="text-xs text-gray-600 whitespace-nowrap">{item.date}</span>
-                  </div>
-                ))
+          <div className="h-80 relative">
+            <div className="flex h-full pb-16">
+              <div className="flex-shrink-0 w-12 flex flex-col justify-between text-xs text-gray-500 pr-2">
+                <span>{formatYAxisLabel(maxValue)}</span>
+                <span>{formatYAxisLabel(maxValue * 0.8)}</span>
+                <span>{formatYAxisLabel(maxValue * 0.6)}</span>
+                <span>{formatYAxisLabel(maxValue * 0.4)}</span>
+                <span>{formatYAxisLabel(maxValue * 0.2)}</span>
+                <span>{formatYAxisLabel(0)}</span>
+              </div>
+              <div className="flex-1 overflow-x-auto">
+                <div className="h-full flex items-end gap-1.5" style={{ minWidth: `${Math.max(chartData.length * 40, 600)}px` }}>
+              {loading ? (
+                <div className="w-full text-center text-gray-500 py-8">Loading chart data...</div>
+              ) : chartData.length > 0 ? (
+                chartData.map((item, index) => {
+                  const value = Number(item.value) || 0;
+                  const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex flex-col items-center justify-end h-full" style={{ minWidth: '36px', flex: '0 0 auto' }}>
+                      <div 
+                        className={`rounded-t transition-all ${
+                          value > 0 
+                            ? 'bg-green-500 hover:bg-green-600' 
+                            : 'bg-gray-200 border border-gray-300'
+                        }`}
+                        style={{ 
+                          height: value > 0 ? `${heightPercent}%` : '2px',
+                          minHeight: value > 0 ? '4px' : '2px',
+                          width: '32px'
+                        }}
+                        title={`${value} ratings on ${item.date}`}
+                      ></div>
+                    </div>
+                  );
+                })
               ) : (
-                <div className="w-full text-center text-gray-500 py-8">No data available</div>
+                <div className="w-full text-center text-gray-500 py-8">
+                  No rating data available. Ratings will appear here once users start rating movies.
+                </div>
               )}
+                </div>
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-12 right-0 overflow-x-auto">
+              <div className="flex gap-1.5" style={{ minWidth: `${Math.max(chartData.length * 40, 600)}px`, height: '60px', paddingTop: '20px' }}>
+              {chartData.length > 0 && chartData.map((item, index) => (
+                <div key={index} className="flex items-start justify-center" style={{ minWidth: '36px', flex: '0 0 auto' }}>
+                  <span className="text-xs text-gray-600 whitespace-nowrap transform -rotate-45 origin-left">
+                    {item.date}
+                  </span>
+                </div>
+              ))}
+              </div>
             </div>
           </div>
         </div>
@@ -234,49 +304,68 @@ export default function Dashboard({ user, setCurrentView }) {
 
         <div className="bg-white p-8 rounded-lg shadow-sm">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Top trending films</h2>
-          <div className="flex gap-6">
+          <div className="flex gap-6 items-start">
             {loading ? (
               <div className="w-full text-center py-8 text-gray-500">Loading movies...</div>
-            ) : topMovies.length > 0 ? (
-              topMovies.slice(0, 3).map((movie) => (
-                <div key={movie._id} className="flex-1 aspect-[3/4] bg-gray-200 rounded-lg overflow-hidden">
-                  {movie.posterUrl ? (
-                    <img 
-                      src={movie.posterUrl} 
-                      alt={movie.title}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.parentElement.innerHTML = `
-                          <div class="w-full h-full flex items-center justify-center text-gray-400">
-                            <svg width="100" height="100" viewBox="0 0 100 100">
-                              <line x1="25" y1="25" x2="75" y2="75" stroke="currentColor" stroke-width="8" />
-                              <line x1="75" y1="25" x2="25" y2="75" stroke="currentColor" stroke-width="8" />
-                            </svg>
-                          </div>
-                        `;
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg width="100" height="100" viewBox="0 0 100 100">
-                        <line x1="25" y1="25" x2="75" y2="75" stroke="currentColor" strokeWidth="8" />
-                        <line x1="75" y1="25" x2="25" y2="75" stroke="currentColor" strokeWidth="8" />
-                      </svg>
+            ) : topMovies && topMovies.length > 0 ? (
+              topMovies.slice(0, 3).map((movie) => {
+                console.log('Rendering movie:', movie);
+                if (!movie || !movie._id) {
+                  console.warn('Invalid movie data:', movie);
+                  return null;
+                }
+                const posterUrl = movie.posterUrl || movie.poster_url || null;
+                return (
+                  <div key={movie._id} className="flex-1 flex flex-col min-w-0">
+                    <div className="bg-gray-200 rounded-lg overflow-hidden mb-2 w-full" style={{ aspectRatio: '3/4', maxHeight: '400px' }}>
+                      {posterUrl ? (
+                        <img 
+                          src={posterUrl} 
+                          alt={movie.title || 'Movie poster'}
+                          className="w-full h-full object-cover object-center"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const parent = e.target.parentElement;
+                            if (!parent.querySelector('.error-placeholder')) {
+                              const placeholder = document.createElement('div');
+                              placeholder.className = 'w-full h-full flex flex-col items-center justify-center text-gray-400 error-placeholder';
+                              placeholder.innerHTML = `
+                                <svg width="60" height="60" viewBox="0 0 100 100" class="mb-2">
+                                  <line x1="25" y1="25" x2="75" y2="75" stroke="currentColor" stroke-width="6" />
+                                  <line x1="75" y1="25" x2="25" y2="75" stroke="currentColor" stroke-width="6" />
+                                </svg>
+                                <span class="text-xs text-center px-2">${movie.title || 'No image'}</span>
+                              `;
+                              parent.appendChild(placeholder);
+                            }
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                          <svg width="60" height="60" viewBox="0 0 100 100" className="mb-2">
+                            <line x1="25" y1="25" x2="75" y2="75" stroke="currentColor" strokeWidth="6" />
+                            <line x1="75" y1="25" x2="25" y2="75" stroke="currentColor" strokeWidth="6" />
+                          </svg>
+                          <span className="text-xs text-center px-2">{movie.title || 'No image'}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))
-            ) : (
-              [1, 2, 3].map((item) => (
-                <div key={item} className="flex-1 aspect-[3/4] bg-gray-200 rounded-lg flex items-center justify-center">
-                  <div className="text-gray-400">
-                    <svg width="100" height="100" viewBox="0 0 100 100">
-                      <line x1="25" y1="25" x2="75" y2="75" stroke="currentColor" strokeWidth="8" />
-                      <line x1="75" y1="25" x2="25" y2="75" stroke="currentColor" strokeWidth="8" />
-                    </svg>
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{movie.title || 'Untitled'}</p>
+                      {movie.averageRating > 0 && (
+                        <p className="text-xs text-gray-600 mt-1">
+                          ⭐ {movie.averageRating.toFixed(1)} ({movie.totalRatings || 0} ratings)
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
+            ) : (
+              <div className="w-full text-center py-8 text-gray-500">
+                {topMovies && topMovies.length === 0 ? 'No movies found' : 'No trending movies available'}
+                <div className="text-xs mt-2">Check console for debug info</div>
+              </div>
             )}
           </div>
         </div>
