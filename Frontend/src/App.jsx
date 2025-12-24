@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import AdminPage from './pages/AdminPage';
 import MovieDetailPage from './pages/MovieDetailPage';
 import MovieReviewPage from './pages/MovieReviewPage';
+import SearchPage from './pages/SearchPage';
 import WishlistPage from './pages/WishlistPage';
 import ProfilePage from './pages/ProfilePage';
 import ProfileEditPage from './pages/ProfileEditPage';
@@ -19,6 +20,7 @@ function App() {
           <div className="app">
             <Routes>
               <Route path="/" element={<HomePage />} />
+              <Route path="/search" element={<SearchPage />} />
               <Route path="/wishlist" element={<WishlistPage />} />
               <Route path="/movie/:id" element={<MovieDetailPage />} />
               <Route path="/movie/:id/reviews" element={<MovieReviewPage />} />

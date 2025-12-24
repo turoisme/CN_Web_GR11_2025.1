@@ -79,7 +79,7 @@ exports.getMovieById = async (req, res, next) => {
 
     // Increment view count
     movie.views += 1;
-    await movie.save();
+    await movie.save({ validateBeforeSave: false });
 
     res.status(HTTP_STATUS.OK).json({
       success: true,
@@ -105,22 +105,47 @@ exports.searchMovies = async (req, res, next) => {
     }
 
     const validParams = validatePaginationParams(page, limit);
+    const searchRegex = new RegExp(q, 'i');
 
-    // Text search
-    const movies = await Movie.find({
-      $text: { $search: q },
-      isActive: true
-    })
+    // Search for actors matching the query
+    const Actor = require('../models/Actor');
+    const matchingActors = await Actor.find({ name: searchRegex }).select('_id');
+    const actorIds = matchingActors.map(a => a._id);
+
+    // Search for directors matching the query
+    const Director = require('../models/Director');
+    const matchingDirectors = await Director.find({ name: searchRegex }).select('_id');
+    const directorIds = matchingDirectors.map(d => d._id);
+
+    // Build search filter with actors and directors
+    const filter = {
+      isActive: true,
+      $or: [
+        { title: searchRegex },
+        { originalTitle: searchRegex },
+        { description: searchRegex }
+      ]
+    };
+
+    // Add actor filter if matching actors found
+    if (actorIds.length > 0) {
+      filter.$or.push({ actors: { $in: actorIds } });
+    }
+
+    // Add director filter if matching directors found
+    if (directorIds.length > 0) {
+      filter.$or.push({ directors: { $in: directorIds } });
+    }
+
+    const movies = await Movie.find(filter)
       .populate('genres', 'name')
       .populate('directors', 'name')
-      .sort({ score: { $meta: 'textScore' } })
+      .populate('actors', 'name')
+      .sort('-averageRating')
       .limit(validParams.limit)
       .skip((validParams.page - 1) * validParams.limit);
 
-    const total = await Movie.countDocuments({
-      $text: { $search: q },
-      isActive: true
-    });
+    const total = await Movie.countDocuments(filter);
 
     res.status(HTTP_STATUS.OK).json({
       success: true,

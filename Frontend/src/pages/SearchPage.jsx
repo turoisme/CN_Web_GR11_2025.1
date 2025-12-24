@@ -25,23 +25,17 @@ export default function SearchPage() {
   // Search movies
   useEffect(() => {
     if (queryParam) {
-      handleSearch();
+      performSearch(queryParam);
     }
   }, [queryParam]);
 
-  const handleSearch = async (e) => {
-    if (e) e.preventDefault();
-    
-    if (!searchQuery.trim()) return;
+  const performSearch = async (query) => {
+    if (!query || !query.trim()) return;
 
     try {
       setLoading(true);
       const response = await movieService.searchMovies({
-        q: searchQuery,
-        type: searchType,
-        genre: filters.genre,
-        year: filters.year,
-        minRating: filters.minRating
+        q: query
       });
 
       if (response.success) {
@@ -53,6 +47,11 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = async (e) => {
+    if (e) e.preventDefault();
+    await performSearch(searchQuery);
   };
 
   const clearFilters = () => {
