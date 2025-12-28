@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Home, Heart, Bell, Settings, Search, User, LogOut, Menu, X } from 'lucide-react';
+import { Heart, Search, User, LogOut, Menu, X } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 import LoginSignupModal from '../auth/LoginSignupModal';
 

@@ -14,10 +14,10 @@ export default function Footer() {
               Your ultimate destination for movie reviews, ratings, and recommendations.
             </p>
             <div className="flex gap-3 mt-4">
-              <a href="#" className="hover:text-white transition-colors"><Facebook size={18} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Twitter size={18} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Instagram size={18} /></a>
-              <a href="#" className="hover:text-white transition-colors"><Youtube size={18} /></a>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Facebook size={18} /></a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Twitter size={18} /></a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Instagram size={18} /></a>
+              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors"><Youtube size={18} /></a>
             </div>
           </div>
 
@@ -49,8 +49,8 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-gray-400">
               <li><a href="mailto:support@filmrate.com" className="hover:text-white transition-colors">Contact Support</a></li>
               <li><Link to="/admin" className="hover:text-white transition-colors">Admin Panel</Link></li>
-              <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
+              <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
         </div>
