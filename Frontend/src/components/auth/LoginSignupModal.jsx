@@ -1,4 +1,5 @@
 import React, { useState, useContext } from 'react';
+import { X } from 'lucide-react';
 import { AuthContext } from '../../context/AuthContext';
 
 export default function LoginSignupModal({ isOpen, onClose }) {
@@ -73,6 +74,15 @@ export default function LoginSignupModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
       <div className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-2xl relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
+          aria-label="Close"
+          type="button"
+        >
+          <X size={24} />
+        </button>
         <div className="flex">
           {/* Form */}
           <div className="flex-1 p-8">
