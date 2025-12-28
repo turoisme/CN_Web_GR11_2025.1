@@ -73,17 +73,18 @@ export default function LoginSignupModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full overflow-hidden shadow-2xl relative">
+      <div className="bg-white rounded-lg max-w-xl w-full overflow-hidden shadow-2xl relative">
         {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition z-10"
+          aria-label="Close"
+          type="button"
         >
           <X size={24} />
         </button>
-        
         <div className="flex">
-          {/* Left side - Form */}
+          {/* Form */}
           <div className="flex-1 p-8">
 
             {/* Title */}
@@ -249,23 +250,6 @@ export default function LoginSignupModal({ isOpen, onClose }) {
                 </button>
               </form>
             )}
-          </div>
-
-          {/* Right side - Image/Info */}
-          <div className="hidden md:block w-96 bg-gray-200 relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="w-48 h-48 bg-white rounded-lg flex items-center justify-center mx-auto mb-6">
-                  <svg width="120" height="120" viewBox="0 0 120 120" className="text-gray-300">
-                    <line x1="30" y1="30" x2="90" y2="90" stroke="currentColor" strokeWidth="8" />
-                    <line x1="90" y1="30" x2="30" y2="90" stroke="currentColor" strokeWidth="8" />
-                  </svg>
-                </div>
-                <p className="text-gray-700 text-sm leading-relaxed">
-                  Login to rate and remember what you watch, have personalized recommendations, and further more...
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
