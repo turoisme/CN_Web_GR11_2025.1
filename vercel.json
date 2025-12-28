@@ -23,7 +23,7 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|json))",
+      "src": "/(.*\\.(js|css|ico|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot|json|webp))",
       "dest": "/Frontend/build/$1"
     },
     {
