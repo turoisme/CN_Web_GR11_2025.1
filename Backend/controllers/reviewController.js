@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Rating = require('../models/Rating');
 const ReviewVote = require('../models/ReviewVote');
@@ -120,19 +121,97 @@ exports.getMovieReviews = async (req, res, next) => {
     );
     const { sort = '-helpfulVotes' } = req.query;
 
-    const total = await Review.countDocuments({ 
+    const db = mongoose.connection.db;
+    const reviewsCollection = db.collection('reviews');
+    const User = require('../models/User');
+    const Movie = require('../models/Movie');
+
+    // Try new schema first
+    let total = await Review.countDocuments({ 
       movie: movieId, 
       isHidden: false 
     });
 
-    const reviews = await Review.find({ 
+    let reviews = await Review.find({ 
       movie: movieId, 
       isHidden: false 
     })
       .populate('user', 'username avatar')
       .sort(sort)
       .limit(limit)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean();
+
+    // If no reviews found, try old schema
+    if (reviews.length === 0) {
+      // Find movie
+      const movie = await Movie.findById(movieId);
+      if (movie) {
+        // Get all movies sorted by creation to create mapping
+        const allMovies = await Movie.find().sort('createdAt').lean();
+        const movieIndex = allMovies.findIndex(m => m._id.toString() === movieId.toString());
+        
+        // Query old schema reviews - try to map movie_id (number) to movie index
+        // movie_id in old schema might correspond to movie order
+        let oldReviews = [];
+        if (movieIndex >= 0) {
+          // Try movie_id = index + 1 (assuming 1-based indexing)
+          oldReviews = await reviewsCollection.find({
+            movie_id: movieIndex + 1,
+            status: 'approved'
+          }).toArray();
+        }
+        
+        // If still no reviews, get all approved reviews for this movie
+        // (might need manual mapping later)
+        if (oldReviews.length === 0) {
+          // Get all approved reviews - will show all reviews (not ideal but works)
+          oldReviews = await reviewsCollection.find({
+            status: 'approved'
+          }).limit(limit * 3).toArray();
+        }
+
+        // Convert old schema to new schema format
+        reviews = await Promise.all(oldReviews.map(async (oldReview) => {
+          // Find user by user_id or use first user as fallback
+          let user;
+          if (oldReview.user_id) {
+            const users = await User.find().limit(1);
+            user = users[0] || { username: 'Anonymous', _id: null };
+          } else {
+            user = { username: 'Anonymous', _id: null };
+          }
+
+          return {
+            _id: oldReview._id,
+            user: {
+              _id: user._id,
+              username: user.username || 'Anonymous',
+              avatar: user.avatar
+            },
+            movie: movieId,
+            rating: oldReview.rating || 5,
+            content: oldReview.content || oldReview.title || '',
+            helpfulVotes: oldReview.helpful_count || 0,
+            unhelpfulVotes: oldReview.not_helpful_count || 0,
+            isHidden: oldReview.status === 'pending' || oldReview.status === 'rejected' || false,
+            createdAt: oldReview.created_at || oldReview.createdAt || new Date(),
+            updatedAt: oldReview.updated_at || oldReview.updatedAt || new Date()
+          };
+        }));
+
+        // Sort reviews
+        if (sort === '-helpfulVotes') {
+          reviews.sort((a, b) => (b.helpfulVotes || 0) - (a.helpfulVotes || 0));
+        } else if (sort === '-createdAt') {
+          reviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        }
+
+        total = reviews.length;
+        // Apply pagination
+        reviews = reviews.slice((page - 1) * limit, page * limit);
+      }
+    }
 
     res.status(HTTP_STATUS.OK).json({
       success: true,

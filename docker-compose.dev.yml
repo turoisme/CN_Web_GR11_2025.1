@@ -1,0 +1,74 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: filmrate-mongodb-dev
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      MONGO_INITDB_DATABASE: filmrate
+    volumes:
+      - mongodb_data_dev:/data/db
+    networks:
+      - filmrate-network-dev
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile.dev
+    container_name: filmrate-backend-dev
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/filmrate?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-secret-key-change-in-production}
+      CLIENT_URL: http://localhost:3000
+    volumes:
+      - ./Backend:/app
+      - /app/node_modules
+      - ./Backend/uploads:/app/uploads
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - filmrate-network-dev
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile.dev
+    container_name: filmrate-frontend-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:5000/api
+      CHOKIDAR_USEPOLLING: true
+    volumes:
+      - ./Frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - filmrate-network-dev
+    stdin_open: true
+    tty: true
+
+volumes:
+  mongodb_data_dev:
+
+networks:
+  filmrate-network-dev:
+    driver: bridge
+

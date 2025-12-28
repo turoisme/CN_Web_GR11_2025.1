@@ -254,20 +254,19 @@ export default function Dashboard({ user, setCurrentView }) {
                 <th className="text-left py-3 px-2 font-semibold text-sm text-gray-700">User Name</th>
                 <th className="text-left py-3 px-2 font-semibold text-sm text-gray-700">Email</th>
                 <th className="text-left py-3 px-2 font-semibold text-sm text-gray-700">Rating counts</th>
-                <th className="text-left py-3 px-2 font-semibold text-sm text-gray-700">Most helpful review</th>
                 <th className="text-left py-3 px-2 font-semibold text-sm text-gray-700">Action</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-8 text-gray-500">
+                  <td colSpan="4" className="text-center py-8 text-gray-500">
                     Loading users...
                   </td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-8 text-gray-500">
+                  <td colSpan="4" className="text-center py-8 text-gray-500">
                     No users found
                   </td>
                 </tr>
@@ -288,7 +287,6 @@ export default function Dashboard({ user, setCurrentView }) {
                       </div>
                     </td>
                     <td className="py-4 px-2 text-gray-600">{userData.email}</td>
-                    <td className="py-4 px-2 text-gray-900 font-medium">100</td>
                     <td className="py-4 px-2 text-gray-900 font-medium">100</td>
                     <td className="py-4 px-2">
                       <button className="text-gray-600 hover:text-gray-900">

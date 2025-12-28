@@ -32,7 +32,7 @@ export default function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center flex-shrink-0">
           <img 
-            src="/logo/logo.png" 
+            src="/logo/Logo.png" 
             alt="FilmRate Logo" 
             className="h-12 object-contain"
           />

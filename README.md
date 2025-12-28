@@ -74,7 +74,78 @@ npm install
 REACT_APP_API_URL=http://localhost:5000/api
 ```
 
-## 🚦 Running the Application
+## 🐳 Running with Docker
+
+### Prerequisites for Docker
+- **Docker Desktop** - [Download](https://www.docker.com/products/docker-desktop)
+- **Docker Compose** (included with Docker Desktop)
+
+### Quick Start with Docker
+
+1. **Create `.env` file in root directory:**
+
+```bash
+# Create .env file in project root
+MONGODB_URI=mongodb+srv://filmrate:123456%40@filmrate.g8nbbyz.mongodb.net/filmrate?appName=FilmRate
+JWT_SECRET=filmrate_super_secret_key_2025_gr11_cnweb
+```
+
+**Note:** Replace `MONGODB_URI` with your MongoDB Atlas connection string or use local MongoDB:
+- For local MongoDB: `MONGODB_URI=mongodb://host.docker.internal:27017/filmrate`
+- For MongoDB Atlas: Use your Atlas connection string
+
+2. **Start all services:**
+
+```bash
+# From project root directory
+docker compose up -d --build
+```
+
+This will:
+- Build and start the Backend container (port 5000)
+- Build and start the Frontend container (port 3000)
+- Connect to MongoDB (Atlas or local)
+
+3. **Access the application:**
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:5000/api`
+
+4. **View logs:**
+
+```bash
+# View all logs
+docker compose logs -f
+
+# View specific service logs
+docker compose logs -f backend
+docker compose logs -f frontend
+```
+
+5. **Stop services:**
+
+```bash
+docker compose down
+```
+
+6. **Rebuild after code changes:**
+
+```bash
+docker compose up -d --build
+```
+
+### Docker Services
+
+- **backend**: Node.js Express API server
+- **frontend**: React app served by Nginx
+
+### Troubleshooting Docker
+
+- **Port already in use**: Stop other services using ports 3000 or 5000
+- **Cannot connect to database**: Check `MONGODB_URI` in `.env` file
+- **Images not loading**: Ensure backend uploads volume is mounted correctly
+- **Container won't start**: Check logs with `docker compose logs`
+
+## 🚦 Running the Application (Without Docker)
 
 ### Start Backend Server
 
